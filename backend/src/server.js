@@ -5,6 +5,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
+const teamRoutes = require("./routes/teamRoutes");
 
 const app = express();
 
@@ -13,9 +14,10 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/teams", teamRoutes);
 
 app.get("/", (req, res) => {
-    res.send("Backend Running");
+  res.send("Backend Running");
 });
 
 app.get("/api/protected", authMiddleware, (req, res) => {
@@ -25,5 +27,5 @@ app.get("/api/protected", authMiddleware, (req, res) => {
 const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
