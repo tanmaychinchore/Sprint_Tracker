@@ -15,6 +15,9 @@ const createTask = async (req, res) => {
             createdBy: req.user,
         });
 
+        const io = req.app.get("io");
+        io.to(projectId).emit("taskCreated", task);
+
         res.status(201).json(task);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -76,6 +79,9 @@ const updateTaskStatus = async (req, res) => {
             { status },
             { new: true }
         );
+
+        const io = req.app.get("io");
+        io.to(updated.project.toString()).emit("taskUpdated", updated);
 
         res.json(updated);
     } catch (error) {
