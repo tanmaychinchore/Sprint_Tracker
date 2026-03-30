@@ -11,6 +11,7 @@ const teamRoutes = require("./routes/teamRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const sprintRoutes = require("./routes/sprintRoutes");
 const taskRoutes = require("./routes/taskRoutes");
+const userStatsRoutes = require("./routes/userStatsRoutes");
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/api/teams", teamRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/sprints", sprintRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/stats", userStatsRoutes);
 
 const server = http.createServer(app);
 

@@ -1,4 +1,5 @@
 const Task = require("../models/Task");
+const { rewardUser } = require("../services/gamificationService");
 
 // CREATE TASK
 const createTask = async (req, res) => {
@@ -74,11 +75,17 @@ const updateTaskStatus = async (req, res) => {
         const { taskId } = req.params;
         const { status } = req.body;
 
+        const task = await Task.findById(taskId);
+
         const updated = await Task.findByIdAndUpdate(
             taskId,
             { status },
             { new: true }
         );
+
+        if (status === "DONE" && task.status !== "DONE") {
+            await rewardUser(task.createdBy, 50); // +50 XP
+        }
 
         const io = req.app.get("io");
         io.to(updated.project.toString()).emit("taskUpdated", updated);
