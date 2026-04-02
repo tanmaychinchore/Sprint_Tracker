@@ -1,10 +1,12 @@
 const Task = require("../models/Task");
 const { rewardUser } = require("../services/gamificationService");
+const User = require("../models/User");
+const { sendEmail } = require("../services/emailService");
 
 // CREATE TASK
 const createTask = async (req, res) => {
     try {
-        const { title, description, projectId, sprintId, priority, dueDate } = req.body;
+        const { title, description, projectId, sprintId, priority, dueDate, assignedTo } = req.body;
 
         const task = await Task.create({
             title,
@@ -15,6 +17,18 @@ const createTask = async (req, res) => {
             dueDate,
             createdBy: req.user,
         });
+
+        if (req.body.assignedTo) {
+            const assignedUser = await User.findById(req.body.assignedTo);
+
+            if (assignedUser) {
+                await sendEmail(
+                    assignedUser.email,
+                    "New Task Assigned",
+                    `You have been assigned a task: ${title}`
+                );
+            }
+        }
 
         const io = req.app.get("io");
         io.to(projectId).emit("taskCreated", task);

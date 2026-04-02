@@ -1,5 +1,6 @@
 const Team = require("../models/Team");
 const User = require("../models/User");
+const { sendEmail } = require("../services/emailService");
 
 // CREATE TEAM
 const createTeam = async (req, res) => {
@@ -72,6 +73,12 @@ const addMember = async (req, res) => {
         });
 
         await team.save();
+
+        await sendEmail(
+            userToAdd.email,
+            "Added to Team",
+            `You have been added to team: ${team.name}`
+        );
 
         res.json({ message: "Member added successfully", team });
     } catch (error) {
