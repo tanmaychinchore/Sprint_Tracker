@@ -6,12 +6,16 @@ const {
     getProjects,
     updateProject,
     deleteProject,
+    getAllMyProjects,
 } = require("../controllers/projectController");
 
 const authMiddleware = require("../middleware/authMiddleware");
 
 // create project
 router.post("/", authMiddleware, createProject);
+
+// get all my projects (across all teams)
+router.get("/all", authMiddleware, getAllMyProjects);
 
 // get all projects of a team
 router.get("/:teamId", authMiddleware, getProjects);

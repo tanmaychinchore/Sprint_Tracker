@@ -76,4 +76,23 @@ const deleteProject = async (req, res) => {
     }
 };
 
-module.exports = { createProject, getProjects, updateProject, deleteProject };
+// GET ALL PROJECTS FOR CURRENT USER (across all their teams)
+const getAllMyProjects = async (req, res) => {
+    try {
+        const Team = require("../models/Team");
+        // Find all teams the user belongs to
+        const teams = await Team.find({ "members.user": req.user });
+        const teamIds = teams.map((t) => t._id);
+
+        // Find all projects in those teams
+        const projects = await Project.find({ team: { $in: teamIds } })
+            .populate("team", "name")
+            .populate("createdBy", "name email");
+
+        res.json(projects);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { createProject, getProjects, updateProject, deleteProject, getAllMyProjects };

@@ -123,4 +123,23 @@ const deleteTask = async (req, res) => {
     }
 };
 
-module.exports = { createTask, getTasksByProject, getTasksBySprint, updateTask, updateTaskStatus, deleteTask };
+// GET MY TASKS (assigned to or created by current user)
+const getMyTasks = async (req, res) => {
+    try {
+        const tasks = await Task.find({
+            $or: [
+                { assignedTo: req.user },
+                { createdBy: req.user },
+            ],
+        })
+            .populate("assignedTo", "name email")
+            .populate("project", "name")
+            .sort({ createdAt: -1 });
+
+        res.json(tasks);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { createTask, getTasksByProject, getTasksBySprint, updateTask, updateTaskStatus, deleteTask, getMyTasks };

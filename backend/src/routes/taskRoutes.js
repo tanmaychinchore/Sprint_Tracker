@@ -8,12 +8,16 @@ const {
     updateTask,
     updateTaskStatus,
     deleteTask,
+    getMyTasks,
 } = require("../controllers/taskController");
 
 const authMiddleware = require("../middleware/authMiddleware");
 
 // create task
 router.post("/", authMiddleware, createTask);
+
+// get my tasks (all tasks for current user)
+router.get("/my", authMiddleware, getMyTasks);
 
 // get tasks
 router.get("/project/:projectId", authMiddleware, getTasksByProject);
