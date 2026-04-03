@@ -1,7 +1,8 @@
 import { useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Sun, Moon, Plus } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,13 +84,9 @@ export function Navbar() {
         {/* Right: Actions */}
         <div className="flex items-center gap-x-2.5">
           {/* Create Task button */}
-          <Button
-            size="sm"
-            className="hidden sm:flex gap-1.5 rounded-lg text-[13px] font-semibold shadow-sm"
-          >
-            <Plus className="h-4 w-4" />
-            Create Task
-          </Button>
+          <div className="hidden sm:block">
+            <CreateTaskDialog />
+          </div>
 
           {/* Theme Toggle */}
           <Button
