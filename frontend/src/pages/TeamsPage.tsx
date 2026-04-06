@@ -3,11 +3,29 @@ import { apiFetch } from "@/lib/api";
 import type { Team, User } from "@/types/models";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateTeamDialog } from "@/components/dialogs/CreateTeamDialog";
-import { Users, MoreHorizontal, Loader2, UserPlus } from "lucide-react";
+import { InviteMemberDialog } from "@/components/dialogs/InviteMemberDialog";
+import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Users, MoreHorizontal, Loader2, Shield, UserPlus } from "lucide-react";
 
 export function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Get current user from localStorage
+  let currentUserId = "";
+  try {
+    const rawUser = localStorage.getItem("user");
+    if (rawUser) {
+      const parsed = JSON.parse(rawUser);
+      currentUserId = parsed.id || parsed._id || "";
+    }
+  } catch {}
 
   const fetchTeams = useCallback(async () => {
     try {
@@ -32,6 +50,13 @@ export function TeamsPage() {
     const admin = team.members.find((m) => m.role === "admin");
     if (admin) return getMemberName(admin);
     return getMemberName(team.members[0]);
+  };
+
+  const isTeamAdmin = (team: Team) => {
+    return team.members.some((m) => {
+      const userId = typeof m.user === "object" ? m.user._id : m.user;
+      return userId === currentUserId && m.role === "admin";
+    });
   };
 
   const teamColors = [
@@ -82,17 +107,61 @@ export function TeamsPage() {
                     <p className="text-xs text-muted-foreground">{team.members.length} member{team.members.length !== 1 ? "s" : ""}</p>
                   </div>
                 </div>
-                <button className="p-1 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted transition-colors">
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
+                {isTeamAdmin(team) && (
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    <Shield className="h-3 w-3" />
+                    Admin
+                  </span>
+                )}
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Lead: <span className="text-foreground font-medium">{getLeadName(team)}</span></span>
-                  <button className="flex items-center gap-1 text-primary hover:underline">
-                    <UserPlus className="h-3 w-3" />
-                    Invite
-                  </button>
+                <div className="space-y-3">
+                  {/* Members list */}
+                  <div className="flex flex-wrap gap-2">
+                    {team.members.map((m, j) => {
+                      const name = getMemberName(m);
+                      const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().substring(0, 2);
+                      const userId = typeof m.user === "object" ? m.user._id : m.user;
+                      
+                      return (
+                        <DropdownMenu key={j}>
+                          <DropdownMenuTrigger asChild>
+                            <div
+                              className="w-8 h-8 rounded-full bg-muted text-muted-foreground text-[10px] font-bold flex items-center justify-center border border-border cursor-pointer hover:border-primary transition-colors"
+                              title={`${name} (${m.role})`}
+                            >
+                              {initials}
+                            </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                              {name}
+                            </div>
+                            <CreateTaskDialog 
+                              defaultAssignedTo={userId}
+                              trigger={
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  <UserPlus className="mr-2 h-3.5 w-3.5" />
+                                  <span>Assign Task</span>
+                                </DropdownMenuItem>
+                              }
+                            />
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Lead: <span className="text-foreground font-medium">{getLeadName(team)}</span></span>
+                    {isTeamAdmin(team) && (
+                      <InviteMemberDialog
+                        teamId={team._id}
+                        teamName={team.name}
+                        onInvited={fetchTeams}
+                      />
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>

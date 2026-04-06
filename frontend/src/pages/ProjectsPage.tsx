@@ -1,13 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiFetch } from "@/lib/api";
 import type { Project, Team } from "@/types/models";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateProjectDialog } from "@/components/dialogs/CreateProjectDialog";
-import { FolderKanban, MoreHorizontal, Calendar, Loader2 } from "lucide-react";
+import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
+import { FolderKanban, Calendar, Loader2, Plus } from "lucide-react";
 
 export function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -70,7 +73,11 @@ export function ProjectsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {projects.map((project, i) => (
-            <Card key={project._id} className="border-border bg-card shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
+            <Card 
+              key={project._id} 
+              className="border-border bg-card shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+              onClick={() => navigate(`/board?project=${project._id}`)}
+            >
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${projectColors[i % projectColors.length]}`}>
@@ -83,17 +90,28 @@ export function ProjectsPage() {
                     )}
                   </div>
                 </div>
-                <button className="p-1 text-muted-foreground hover:text-foreground rounded-md hover:bg-muted">
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mt-4">
                   <span>Team: <span className="text-foreground font-medium">{getTeamName(project)}</span></span>
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     {formatDeadline(project.deadline)}
                   </span>
+                </div>
+                <div className="mt-4 pt-4 border-t border-border/50 flex justify-end">
+                  {/* Stop dragging/navigating when clicking inner button */}
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <CreateTaskDialog 
+                      defaultProjectId={project._id}
+                      trigger={
+                        <button className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline">
+                          <Plus className="h-3.5 w-3.5" />
+                          Quick Task
+                        </button>
+                      }
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>

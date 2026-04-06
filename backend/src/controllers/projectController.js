@@ -6,11 +6,9 @@ const createProject = async (req, res) => {
     try {
         const { name, description, teamId, deadline } = req.body;
 
-        // check team exists
         const team = await Team.findById(teamId);
         if (!team) return res.status(404).json({ message: "Team not found" });
 
-        // check if user is part of team
         const isMember = team.members.find(
             (m) => m.user.toString() === req.user
         );
@@ -79,14 +77,16 @@ const deleteProject = async (req, res) => {
 // GET ALL PROJECTS FOR CURRENT USER (across all their teams)
 const getAllMyProjects = async (req, res) => {
     try {
-        const Team = require("../models/Team");
         // Find all teams the user belongs to
         const teams = await Team.find({ "members.user": req.user });
         const teamIds = teams.map((t) => t._id);
 
         // Find all projects in those teams
         const projects = await Project.find({ team: { $in: teamIds } })
-            .populate("team", "name")
+            .populate({
+                path: "team",
+                select: "name members owner"
+            })
             .populate("createdBy", "name email");
 
         res.json(projects);
@@ -95,4 +95,27 @@ const getAllMyProjects = async (req, res) => {
     }
 };
 
-module.exports = { createProject, getProjects, updateProject, deleteProject, getAllMyProjects };
+// GET PROJECT MEMBERS (returns the team members for a project)
+const getProjectMembers = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+
+        const project = await Project.findById(projectId).populate("team");
+        if (!project) {
+            return res.status(404).json({ message: "Project not found" });
+        }
+
+        const team = await Team.findById(project.team._id || project.team)
+            .populate("members.user", "name email");
+
+        if (!team) {
+            return res.status(404).json({ message: "Team not found" });
+        }
+
+        res.json(team.members);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+module.exports = { createProject, getProjects, updateProject, deleteProject, getAllMyProjects, getProjectMembers };

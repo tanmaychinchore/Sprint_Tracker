@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api";
-import type { Project } from "@/types/models";
+import type { Project, TeamMember, User } from "@/types/models";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,16 +27,19 @@ interface CreateTaskDialogProps {
   trigger?: React.ReactNode;
   onCreated?: () => void;
   defaultProjectId?: string;
+  defaultAssignedTo?: string;
 }
 
-export function CreateTaskDialog({ trigger, onCreated, defaultProjectId }: CreateTaskDialogProps) {
+export function CreateTaskDialog({ trigger, onCreated, defaultProjectId, defaultAssignedTo }: CreateTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [members, setMembers] = useState<TeamMember[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [projectId, setProjectId] = useState(defaultProjectId || "");
   const [priority, setPriority] = useState("MEDIUM");
   const [dueDate, setDueDate] = useState("");
+  const [assignedTo, setAssignedTo] = useState(defaultAssignedTo || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +49,31 @@ export function CreateTaskDialog({ trigger, onCreated, defaultProjectId }: Creat
       if (defaultProjectId) setProjectId(defaultProjectId);
     }
   }, [open, defaultProjectId]);
+
+  // Fetch team members when project changes
+  useEffect(() => {
+    if (projectId) {
+      apiFetch<TeamMember[]>(`/projects/${projectId}/members`)
+        .then(setMembers)
+        .catch(() => setMembers([]));
+    } else {
+      setMembers([]);
+    }
+    if (!defaultAssignedTo) {
+      setAssignedTo(""); // Only reset if a default isn't explicitly requested
+    }
+  }, [projectId, defaultAssignedTo]);
+
+  const getMemberInfo = (member: TeamMember): { id: string; name: string; email: string } | null => {
+    if (typeof member.user === "object" && member.user !== null) {
+      return {
+        id: member.user._id,
+        name: member.user.name,
+        email: member.user.email,
+      };
+    }
+    return null;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +91,7 @@ export function CreateTaskDialog({ trigger, onCreated, defaultProjectId }: Creat
           projectId,
           priority,
           dueDate: dueDate || undefined,
+          assignedTo: assignedTo || undefined,
         }),
       });
       setTitle("");
@@ -70,6 +99,7 @@ export function CreateTaskDialog({ trigger, onCreated, defaultProjectId }: Creat
       setProjectId(defaultProjectId || "");
       setPriority("MEDIUM");
       setDueDate("");
+      setAssignedTo(defaultAssignedTo || "");
       setOpen(false);
       onCreated?.();
     } catch (err) {
@@ -148,15 +178,39 @@ export function CreateTaskDialog({ trigger, onCreated, defaultProjectId }: Creat
                 </Select>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="task-due">Due date (optional)</Label>
-              <Input
-                id="task-due"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                disabled={loading}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Assign to</Label>
+                <Select value={assignedTo} onValueChange={setAssignedTo}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={members.length === 0 ? "Select project first" : "Select member"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {members.map((m) => {
+                      const info = getMemberInfo(m);
+                      if (!info) return null;
+                      return (
+                        <SelectItem key={info.id} value={info.id}>
+                          <div className="flex flex-col">
+                            <span>{info.name}</span>
+                            <span className="text-[10px] text-muted-foreground">{info.email}</span>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="task-due">Due date (optional)</Label>
+                <Input
+                  id="task-due"
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  disabled={loading}
+                />
+              </div>
             </div>
             {projects.length === 0 && (
               <p className="text-xs text-muted-foreground">No projects yet. Create a project first.</p>

@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
-import { Zap, CheckCircle2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useCallback, useEffect } from "react";
+import { Zap, CheckCircle2, Loader2 } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { AuthLayout } from "@/components/layout/AuthLayout";
 import {
   Card,
@@ -17,7 +17,30 @@ export function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [invitation, setInvitation] = useState<any>(null);
+  const [isInviting, setIsInviting] = useState(false);
+  
   const navigate = useNavigate();
+  const { inviteToken } = useParams<{ inviteToken: string }>();
+
+  // Fetch invitation details if token is present
+  useEffect(() => {
+    if (inviteToken) {
+      const fetchInvite = async () => {
+        try {
+          setIsInviting(true);
+          const response = await fetch(`/api/teams/invite/${inviteToken}`);
+          if (response.ok) {
+            const data = await response.json();
+            setInvitation(data);
+          }
+        } catch {} finally {
+          setIsInviting(false);
+        }
+      };
+      fetchInvite();
+    }
+  }, [inviteToken]);
 
   const handleRegister = useCallback(async (data: RegisterFormData) => {
     setIsLoading(true);
@@ -96,11 +119,20 @@ export function RegisterPage() {
           className="animate-slide-up px-7"
           style={{ animationDelay: "0.3s" }}
         >
-          <RegisterForm
-            onSubmit={handleRegister}
-            isLoading={isLoading}
-            apiError={apiError}
-          />
+          {isInviting ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground animate-pulse">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <p className="text-xs">Validating invitation...</p>
+            </div>
+          ) : (
+            <RegisterForm
+              onSubmit={handleRegister}
+              isLoading={isLoading}
+              apiError={apiError}
+              invitation={invitation}
+              initialInviteToken={inviteToken}
+            />
+          )}
         </CardContent>
 
         <CardFooter

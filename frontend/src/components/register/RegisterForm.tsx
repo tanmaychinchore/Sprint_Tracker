@@ -9,6 +9,8 @@ interface RegisterFormProps {
   onSubmit: (data: RegisterFormData) => Promise<void>;
   isLoading: boolean;
   apiError: string | null;
+  invitation?: { teamName?: string; invitedBy?: string; email: string; role: string };
+  initialInviteToken?: string;
 }
 
 function validateName(name: string): string | undefined {
@@ -36,11 +38,12 @@ function validateConfirmPassword(password: string, confirm: string): string | un
   return undefined;
 }
 
-export function RegisterForm({ onSubmit, isLoading, apiError }: RegisterFormProps) {
+export function RegisterForm({ onSubmit, isLoading, apiError, invitation, initialInviteToken }: RegisterFormProps) {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(invitation?.email || "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [inviteToken] = useState(initialInviteToken || "");
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -100,6 +103,13 @@ export function RegisterForm({ onSubmit, isLoading, apiError }: RegisterFormProp
     [name, email, password, confirmPassword, touched.confirmPassword]
   );
 
+  // Update email if invitation changes
+  React.useEffect(() => {
+    if (invitation?.email) {
+      setEmail(invitation.email);
+    }
+  }, [invitation]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -118,7 +128,7 @@ export function RegisterForm({ onSubmit, isLoading, apiError }: RegisterFormProp
 
     if (nameError || emailError || passwordError || confirmError) return;
 
-    await onSubmit({ name: name.trim(), email: email.trim(), password });
+    await onSubmit({ name: name.trim(), email: email.trim(), password, inviteToken: inviteToken || undefined });
   };
 
   return (
@@ -129,6 +139,18 @@ export function RegisterForm({ onSubmit, isLoading, apiError }: RegisterFormProp
           <p className="flex items-center gap-2">
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-destructive" />
             {apiError}
+          </p>
+        </div>
+      )}
+
+      {/* Invitation Info */}
+      {invitation && (
+        <div className="animate-scale-in rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-primary" role="alert">
+          <p className="font-medium mb-1">You've been invited!</p>
+          <p className="text-muted-foreground leading-snug">
+            {invitation.invitedBy || "A team lead"} has invited you to join the team 
+            <span className="font-bold text-primary"> {invitation.teamName || "SprintForge"}</span> as a 
+            <span className="font-bold"> {invitation.role}</span>.
           </p>
         </div>
       )}

@@ -9,6 +9,7 @@ const {
     updateTaskStatus,
     deleteTask,
     getMyTasks,
+    getTeamTasks,
 } = require("../controllers/taskController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -18,6 +19,9 @@ router.post("/", authMiddleware, createTask);
 
 // get my tasks (all tasks for current user)
 router.get("/my", authMiddleware, getMyTasks);
+
+// get all team tasks (admin view)
+router.get("/team", authMiddleware, getTeamTasks);
 
 // get tasks
 router.get("/project/:projectId", authMiddleware, getTasksByProject);

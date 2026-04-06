@@ -71,6 +71,26 @@ export interface UserStats {
   tasksCompleted: number;
 }
 
+export interface Notification {
+  _id: string;
+  user: string;
+  type: "TASK_SUBMITTED_FOR_REVIEW" | "TASK_APPROVED" | "TASK_ASSIGNED" | "TEAM_INVITE";
+  message: string;
+  task?: { _id: string; title: string; status: TaskStatus };
+  read: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Invitation {
+  email: string;
+  teamName?: string;
+  invitedBy?: string;
+  role: string;
+  status: "PENDING" | "ACCEPTED" | "EXPIRED";
+  expiresAt: string;
+}
+
 /* ─── Kanban Column Mapping ─── */
 export const STATUS_LABELS: Record<TaskStatus, string> = {
   TODO: "To Do",

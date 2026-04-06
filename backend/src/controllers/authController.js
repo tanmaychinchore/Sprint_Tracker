@@ -1,10 +1,12 @@
 const User = require("../models/User");
+const Invitation = require("../models/Invitation");
+const Team = require("../models/Team");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, inviteToken } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -19,13 +21,51 @@ const register = async (req, res) => {
       password: hashedPassword,
     });
 
+    // If invite token provided, accept the invitation and add to team
+    let joinedTeam = null;
+    if (inviteToken) {
+      const invitation = await Invitation.findOne({
+        token: inviteToken,
+        status: "PENDING",
+        expiresAt: { $gt: new Date() },
+      });
+
+      if (invitation) {
+        // Verify the email matches
+        if (invitation.email.toLowerCase() === email.toLowerCase()) {
+          const team = await Team.findById(invitation.team);
+          if (team) {
+            // Check not already a member (edge case)
+            const alreadyMember = team.members.find(
+              (m) => m.user.toString() === user._id.toString()
+            );
+            if (!alreadyMember) {
+              team.members.push({
+                user: user._id,
+                role: invitation.role || "member",
+              });
+              await team.save();
+              joinedTeam = team.name;
+            }
+          }
+
+          // Mark invitation as accepted
+          invitation.status = "ACCEPTED";
+          await invitation.save();
+        }
+      }
+    }
+
     res.status(201).json({
-        message: "User registered successfully",
-        user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-        },
+      message: joinedTeam
+        ? `Account created and joined team "${joinedTeam}" successfully!`
+        : "User registered successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+      joinedTeam,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

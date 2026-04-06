@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,6 +88,9 @@ export function Navbar() {
           <div className="hidden sm:block">
             <CreateTaskDialog />
           </div>
+
+          {/* Notifications */}
+          <NotificationBell />
 
           {/* Theme Toggle */}
           <Button

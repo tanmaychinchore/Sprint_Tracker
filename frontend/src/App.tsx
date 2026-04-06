@@ -16,6 +16,7 @@ export default function App() {
         {/* Public Authentication Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/register/:inviteToken" element={<RegisterPage />} />
 
         {/* Protected Dashboard Routes */}
         <Route element={<AuthGuard />}>
