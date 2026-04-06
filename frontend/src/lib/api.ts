@@ -3,7 +3,7 @@
  * and handles 401 token expiry globally.
  */
 
-const API_BASE = "/api";
+export const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 export async function apiFetch<T = any>(
   url: string,
@@ -38,7 +38,7 @@ export async function apiFetch<T = any>(
     try {
       const errorData = await response.json();
       errorMessage = errorData.message || errorData.error || errorMessage;
-    } catch {}
+    } catch { }
     throw new Error(errorMessage);
   }
 

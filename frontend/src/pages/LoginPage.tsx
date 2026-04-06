@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { LoginForm } from "@/components/login/LoginForm";
 import type { LoginFormData, LoginResponse } from "@/types/auth";
+import { API_BASE } from "@/lib/api";
 
 export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +24,7 @@ export function LoginPage() {
     setApiError(null);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

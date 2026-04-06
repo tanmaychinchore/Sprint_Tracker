@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { RegisterForm } from "@/components/register/RegisterForm";
 import type { RegisterFormData } from "@/types/auth";
+import { API_BASE } from "@/lib/api";
 
 export function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +30,7 @@ export function RegisterPage() {
       const fetchInvite = async () => {
         try {
           setIsInviting(true);
-          const response = await fetch(`/api/teams/invite/${inviteToken}`);
+          const response = await fetch(`${API_BASE}/teams/invite/${inviteToken}`);
           if (response.ok) {
             const data = await response.json();
             setInvitation(data);
@@ -47,7 +48,7 @@ export function RegisterPage() {
     setApiError(null);
 
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
