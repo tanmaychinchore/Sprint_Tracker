@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiFetch } from "@/lib/api";
-import type { Project, TeamMember, User } from "@/types/models";
+import type { Project, TeamMember } from "@/types/models";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

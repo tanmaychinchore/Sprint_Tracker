@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Users, MoreHorizontal, Loader2, Shield, UserPlus } from "lucide-react";
+import { Users, Loader2, Shield, UserPlus } from "lucide-react";
 
 export function TeamsPage() {
   const [teams, setTeams] = useState<Team[]>([]);
