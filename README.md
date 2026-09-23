@@ -1,4 +1,4 @@
-# SprintForge 🚀
+# SprintTracker 🚀
 
 Gamified Agile Team Productivity Platform
 
